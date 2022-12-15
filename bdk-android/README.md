@@ -97,3 +97,5 @@ and use the `publishToMavenLocal` task without excluding the signing task:
 
 [`bdk`]: https://github.com/bitcoindevkit/bdk
 [`bdk-ffi`]: https://github.com/bitcoindevkit/bdk-ffi
+
+temporary change to run the tests
