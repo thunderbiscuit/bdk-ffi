@@ -67,3 +67,6 @@ jobs:
 #        run: |
 #          cd bdk-android
 #          ./gradlew test --console=rich
+
+
+
