@@ -1,13 +1,5 @@
 name: Test Android
-on:
-  push:
-    paths:
-      - "bdk-ffi/**"
-      - "bdk-android/**"
-  pull_request:
-    paths:
-      - "bdk-ffi/**"
-      - "bdk-android/**"
+on: [workflow_dispatch]
 
 env:
   ANDROID_NDK_ROOT: /usr/local/lib/android/sdk/ndk/21.4.7075529
