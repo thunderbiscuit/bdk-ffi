@@ -8,15 +8,13 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: macos-11
     steps:
       - name: Install Android NDK 21.4.7075529
         run: |
-          ANDROID_ROOT=/usr/local/lib/android
-          ANDROID_SDK_ROOT=${ANDROID_ROOT}/sdk
-          SDKMANAGER=${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager
-          echo "y" | $SDKMANAGER "ndk;21.4.7075529"
-
+          ANDROID_HOME=$HOME/Library/Android/sdk
+          SDKMANAGER=$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager
+          echo y | $SDKMANAGER "ndk;21.4.7075529"
       - name: Check out PR branch
         uses: actions/checkout@v2
 
@@ -38,7 +36,15 @@ jobs:
       - name: Install rust android targets
         run: rustup target add x86_64-linux-android aarch64-linux-android armv7-linux-androideabi
 
-      - name: Run Android tests
+      - name: Build bdk-android library
         run: |
           cd bdk-android
-          ./gradlew test --console=rich
+          ./gradlew buildAndroidLib
+
+      - name: Run connected tests
+        uses: ReactiveCircus/android-emulator-runner@v2
+        with:
+          api-level: 31
+          target: google_apis
+          arch: x86_64
+          script: ./gradlew connectedAndroidTest
