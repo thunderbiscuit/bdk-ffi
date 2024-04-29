@@ -31,10 +31,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: true
-      # TODO 2: Other CI workflows use explicit Rust compiler versions, I think we should do the same here
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
 
       - name: "Generate bdk.py and binaries"
         run: bash ./scripts/generate-linux.sh
