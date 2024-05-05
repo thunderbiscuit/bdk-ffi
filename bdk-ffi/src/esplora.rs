@@ -1,16 +1,19 @@
-use std::ops::{Deref};
-use crate::error::EsploraError;
-use crate::wallet::{Update};
 use crate::bitcoin::Transaction;
-use crate::types::FullScanRequest;
+use crate::error::EsploraError;
+use crate::types::{FullScanRequest, SyncRequest};
+use crate::wallet::Update;
+use std::collections::BTreeMap;
 
 use bdk::bitcoin::Transaction as BdkTransaction;
+use bdk::chain::spk_client::FullScanRequest as BdkFullScanRequest;
 use bdk::chain::spk_client::FullScanResult as BdkFullScanResult;
+use bdk::chain::spk_client::SyncRequest as BdkSyncRequest;
+use bdk::chain::spk_client::SyncResult as BdkSyncResult;
+use bdk::KeychainKind;
 use bdk_esplora::esplora_client::{BlockingClient, Builder};
 use bdk_esplora::EsploraExt;
 
 use std::sync::Arc;
-use bdk::KeychainKind;
 
 pub struct EsploraClient(BlockingClient);
 
@@ -26,41 +29,13 @@ impl EsploraClient {
         stop_gap: u64,
         parallel_requests: u64,
     ) -> Result<Arc<Update>, EsploraError> {
+        // using option and take is not ideal but the only way to take full ownership of the request
+        // TODO: if the option is None should throw error like "already consumed request" or "invalid request"
+        let request: BdkFullScanRequest<KeychainKind> = request.0.lock().unwrap().take().unwrap();
 
-        // let previous_tip = wallet.latest_checkpoint();
-        // let keychain_spks = wallet.all_unbounded_spk_iters().into_iter().collect();
-
-        // let (update_graph, last_active_indices) = self
-        //     .0
-        //     .full_scan(keychain_spks, stop_gap as usize, parallel_requests as usize)
-        //     .map_err(|e| EsploraError::from(*e))?;
-        //
-        // let missing_heights = update_graph.missing_heights(wallet.local_chain());
-        // let chain_update = self
-        //     .0
-        //     .update_local_chain(previous_tip, missing_heights)
-        //     .map_err(|e| EsploraError::from(*e))?;
-        //
-        // let update = BdkUpdate {
-        //     last_active_indices,
-        //     graph: update_graph,
-        //     chain: Some(chain_update),
-        // };
-
-        // let update = self.0.full_scan(
-        //     request.0.clone(),
-        //     stop_gap as usize,
-        //     parallel_requests as usize,
-        // );
-
-        let result: BdkFullScanResult<KeychainKind> = self.0.full_scan(
-            // throw appropriate error if request is empty
-            // request.0.take().expect("Request is empty"),
-            request.0.lock().unwrap().deref(),
-            // request.0.lock().unwrap().deref().take(),
-            stop_gap as usize,
-            parallel_requests as usize,
-        )?;
+        let result: BdkFullScanResult<KeychainKind> =
+            self.0
+                .full_scan(request, stop_gap as usize, parallel_requests as usize)?;
 
         let update = bdk::wallet::Update {
             last_active_indices: result.last_active_indices,
@@ -71,7 +46,25 @@ impl EsploraClient {
         Ok(Arc::new(Update(update)))
     }
 
-    // pub fn sync();
+    pub fn sync(
+        &self,
+        request: Arc<SyncRequest>,
+        parallel_requests: u64,
+    ) -> Result<Arc<Update>, EsploraError> {
+        // using option and take is not ideal but the only way to take full ownership of the request
+        // TODO: if the option is None should throw error like "already consumed request" or "invalid request"
+        let request: BdkSyncRequest = request.0.lock().unwrap().take().unwrap();
+
+        let result: BdkSyncResult = self.0.sync(request, parallel_requests as usize)?;
+
+        let update = bdk::wallet::Update {
+            last_active_indices: BTreeMap::default(),
+            graph: result.graph_update,
+            chain: Some(result.chain_update),
+        };
+
+        Ok(Arc::new(Update(update)))
+    }
 
     pub fn broadcast(&self, transaction: &Transaction) -> Result<(), EsploraError> {
         let bdk_transaction: BdkTransaction = transaction.into();

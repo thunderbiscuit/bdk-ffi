@@ -4,7 +4,9 @@ use crate::error::{
     CalculateFeeError, CannotConnectError, CreateTxError, PersistenceError, SignerError,
     TxidParseError, WalletCreationError,
 };
-use crate::types::{AddressInfo, Balance, CanonicalTx, LocalOutput, ScriptAmount};
+use crate::types::{
+    AddressInfo, Balance, CanonicalTx, FullScanRequest, LocalOutput, ScriptAmount, SyncRequest,
+};
 
 use bdk::bitcoin::blockdata::script::ScriptBuf as BdkScriptBuf;
 use bdk::bitcoin::Network;
@@ -12,8 +14,8 @@ use bdk::bitcoin::Psbt as BdkPsbt;
 use bdk::bitcoin::{OutPoint as BdkOutPoint, Sequence, Txid};
 use bdk::wallet::tx_builder::ChangeSpendPolicy;
 use bdk::wallet::{ChangeSet, Update as BdkUpdate};
-use bdk::{KeychainKind, SignOptions};
 use bdk::Wallet as BdkWallet;
+use bdk::{KeychainKind, SignOptions};
 use bdk_file_store::Store;
 
 use std::collections::HashSet;
@@ -49,11 +51,16 @@ impl Wallet {
         self.inner_mutex.lock().expect("wallet")
     }
 
-    pub fn reveal_next_address(&self, keychain_kind: KeychainKind) -> Result<AddressInfo, PersistenceError> {
+    pub fn reveal_next_address(
+        &self,
+        keychain_kind: KeychainKind,
+    ) -> Result<AddressInfo, PersistenceError> {
         self.get_wallet()
             .reveal_next_address(keychain_kind)
             .map(|address_info| address_info.into())
-            .map_err(|e| PersistenceError::Write { error_message: e.to_string() })
+            .map_err(|e| PersistenceError::Write {
+                error_message: e.to_string(),
+            })
     }
 
     pub fn apply_update(&self, update: Arc<Update>) -> Result<(), CannotConnectError> {
@@ -136,6 +143,16 @@ impl Wallet {
 
     pub fn list_output(&self) -> Vec<LocalOutput> {
         self.get_wallet().list_output().map(|o| o.into()).collect()
+    }
+
+    pub fn start_full_scan(&self) -> Arc<FullScanRequest> {
+        let request = self.get_wallet().start_full_scan();
+        Arc::new(FullScanRequest(Mutex::new(Some(request))))
+    }
+
+    pub fn start_sync_with_revealed_spks(&self) -> Arc<SyncRequest> {
+        let request = self.get_wallet().start_sync_with_revealed_spks();
+        Arc::new(SyncRequest(Mutex::new(Some(request))))
     }
 }
 

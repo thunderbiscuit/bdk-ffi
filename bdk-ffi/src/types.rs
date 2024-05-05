@@ -1,8 +1,9 @@
 use crate::bitcoin::{Address, OutPoint, Script, Transaction, TxOut};
 
+use bdk::chain::spk_client::FullScanRequest as BdkFullScanRequest;
+use bdk::chain::spk_client::SyncRequest as BdkSyncRequest;
 use bdk::chain::tx_graph::CanonicalTx as BdkCanonicalTx;
 use bdk::chain::{ChainPosition as BdkChainPosition, ConfirmationTimeHeightAnchor};
-use bdk::chain::spk_client::FullScanRequest as BdkFullScanRequest;
 use bdk::wallet::AddressInfo as BdkAddressInfo;
 use bdk::wallet::Balance as BdkBalance;
 use bdk::KeychainKind;
@@ -109,6 +110,8 @@ impl From<BdkLocalOutput> for LocalOutput {
     }
 }
 
+pub struct FullScanRequest(pub(crate) Mutex<Option<BdkFullScanRequest<KeychainKind>>>);
+pub struct SyncRequest(pub(crate) Mutex<Option<BdkSyncRequest>>);
 // pub struct FullScanRequest(pub(crate) Option<BdkFullScanRequest<KeychainKind>>);
 // pub struct FullScanRequest(pub(crate) BdkFullScanRequest<KeychainKind>);
-pub struct FullScanRequest(pub(crate) Mutex<BdkFullScanRequest<KeychainKind>>);
+// pub struct FullScanRequest(pub(crate) Mutex<BdkFullScanRequest<KeychainKind>>);

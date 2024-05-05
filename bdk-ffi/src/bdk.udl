@@ -238,6 +238,10 @@ dictionary CanonicalTx {
   ChainPosition chain_position;
 };
 
+interface FullScanRequest {};
+
+interface SyncRequest {};
+
 // ------------------------------------------------------------------------
 // bdk crate - wallet module
 // ------------------------------------------------------------------------
@@ -283,6 +287,10 @@ interface Wallet {
   sequence<LocalOutput> list_unspent();
 
   sequence<LocalOutput> list_output();
+
+  FullScanRequest start_full_scan();
+
+  SyncRequest start_sync_with_revealed_spks();
 };
 
 interface Update {};
@@ -432,6 +440,9 @@ interface EsploraClient {
   Update full_scan(FullScanRequest full_scan_request, u64 stop_gap, u64 parallel_requests);
 
   [Throws=EsploraError]
+  Update sync(SyncRequest sync_request, u64 parallel_requests);
+
+  [Throws=EsploraError]
   void broadcast([ByRef] Transaction transaction);
 };
 
@@ -541,5 +552,3 @@ interface FeeRate {
 
   u64 to_sat_per_kwu();
 };
-
-interface FullScanRequest {};
