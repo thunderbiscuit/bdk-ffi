@@ -377,6 +377,8 @@ interface Wallet {
 
   u32? derivation_index(KeychainKind keychain);
 
+  KeychainAndIndex? derivation_of_spk(Script spk);
+
   AddressInfo reveal_next_address(KeychainKind keychain);
 
   AddressInfo peek_address(KeychainKind keychain, u32 index);
@@ -627,6 +629,11 @@ dictionary ScriptAmount {
 dictionary SentAndReceivedValues {
     Amount sent;
     Amount received;
+};
+
+dictionary KeychainAndIndex {
+    KeychainKind keychain;
+    u32 index;
 };
 
 // ------------------------------------------------------------------------
