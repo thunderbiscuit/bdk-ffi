@@ -16,7 +16,7 @@ permissions: {}
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    runs-on: macos-14
     steps:
       - name: "Show default version of NDK"
         run: echo $ANDROID_NDK_ROOT
@@ -44,7 +44,7 @@ jobs:
       - name: "Build Android library"
         run: |
           cd bdk-android
-          bash ./scripts/build-linux-x86_64.sh
+          bash ./scripts/build-macos-aarch64.sh
 
 # There are currently no unit tests for bdk-android (see the tests in bdk-jvm instead) and the 
 # integration tests require the macOS image which is not working with the older NDK version we
